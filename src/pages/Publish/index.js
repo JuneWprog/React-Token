@@ -12,21 +12,25 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import "./index.scss";
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useEffect, useState} from "react";
-import { getChannelAPI, createArticleAPI ,getArticleById} from "@/apis/article";
+import { createArticleAPI ,getArticleById, updateArticleAPI} from "@/apis/article";
 import { useChannel } from '@/hooks/useChannel'
+import { type } from "@testing-library/user-event/dist/type";
 const { Option } = Select;
 
 const Publish = () => {
   const [imgList, setImgList] = useState([]);
   const [imageType, setImageType] = useState(0);
   const { channelList } = useChannel();
+  const [form] = Form.useForm();
+  const [searchParams] = useSearchParams();
+  const articleId = searchParams.get("id");
+  const navigate = useNavigate();
   const onFinish = (formValue) => {
-    console.log(formValue);
     //preprocess the data
     //validate the image type and image list
     if (imgList.length !== imageType) return message.warning(`Please upload ${imageType}  images`);
@@ -36,14 +40,24 @@ const Publish = () => {
       content,
       cover: {
         type: imageType,
-        images: imgList.map((item) => item.response.data.url),
+        images: imgList.map((item) => {return (item.response)?item.response.data.url:item.url}), //image list api just need the url
       },
       channel_id,
     };
-    // using api
-    createArticleAPI(articleData).then((res) => {
-      message.success("Publish successfully");
-    });
+    // using api to create article
+    if(articleId){
+      //new article
+      updateArticleAPI({...articleData, id: articleId})
+    }
+    else{
+      //edit article
+      createArticleAPI(articleData)
+    }
+    //reset the form field value and image list after submit 
+    form.resetFields();
+    setImgList([]);
+    setImageType(0);
+    navigate('/article')
   };
 
   //set the image list
@@ -54,18 +68,26 @@ const Publish = () => {
   const onTypeChange = (e) => {
     setImageType(e.target.value);
    }
+  // For Edit:
   //fill the form field value if the request with a aritle id 
-  //get data from the server by the id
-  const [form] = Form.useForm();
-  const [searchParams] = useSearchParams();
-  const articleId = searchParams.get("id");
+  //get data from the server by the article id for editing
+
    useEffect(() => {
     async function getArticleDetail(){
       const res= await getArticleById(articleId)
       //automatic fill the form field value
-      form.setFieldsValue(res.data)
+      form.setFieldsValue({
+        ...res.data,
+        type: res.data.cover.type,
+        
+      })
+      //fill the image list
+      setImageType(res.data.cover.type)
+      setImgList(res.data.cover.images.map(url=>{return {url}}))
     }
-    getArticleDetail()
+    if(articleId){
+      getArticleDetail()
+    }
    },[articleId, form])
 
   return (
@@ -75,7 +97,7 @@ const Publish = () => {
           <Breadcrumb
             items={[
               { title: <Link to={"/"}>Home</Link> },
-              //   { title: `${articleId ? '编辑' : '发布'}文章` },
+                { title: `${articleId ? 'Edit' : 'New'} Article` },
             ]}
           />
         }
@@ -130,6 +152,7 @@ const Publish = () => {
               action={"http://geek.itheima.net/v1_0/upload"}
               onChange={onChange}
               maxCount ={imageType}
+              fileList={imgList}
             >
               <div>
                 <PlusOutlined />
@@ -159,7 +182,7 @@ const Publish = () => {
           <Form.Item wrapperCol={{ offset: 4 }}>
             <Space>
               <Button size="large" type="primary" htmlType="submit">
-                Publish
+                {articleId ? 'Update' : 'Publish'}
               </Button>
             </Space>
           </Form.Item>

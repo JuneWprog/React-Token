@@ -25,7 +25,7 @@ export function getArticleListAPI(params){
     )
 }
 
-//2. post articles request
+//2. post one article request
 export function createArticleAPI(data){
     return request(
         {
@@ -35,7 +35,7 @@ export function createArticleAPI(data){
         }
     )
 }
-
+//3. delete one article 
 export function delArticleAPI(id){
     return request(
         {
@@ -44,12 +44,22 @@ export function delArticleAPI(id){
         }
     )
 }
-
+//4. read article by id
 export function getArticleById(id){
     return request(
         {
             url: `/mp/articles/${id}`,
             method: 'GET'
+        }
+    )
+}
+//5.update article
+export function updateArticleAPI(data){
+    return request(
+        {
+            url: `/mp/articles/${data.id}?draft=false`,
+            method: 'PUT',
+            data
         }
     )
 }

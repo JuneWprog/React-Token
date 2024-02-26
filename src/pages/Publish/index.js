@@ -37,13 +37,15 @@ const Publish = () => {
   const onFinish = (formValue) => {
     console.log(formValue);
     //preprocess the data
+    //validate the image type and image list
+    if (imgList.length !== imageType) return message.warning(`Please upload ${imageType}  images`);
     const { title, content, channel_id } = formValue;
     const articleData = {
       title,
       content,
       cover: {
-        type: 0,
-        images: [],
+        type: imageType,
+        images: imgList.map((item) => item.response.data.url),
       },
       channel_id,
     };
@@ -53,6 +55,7 @@ const Publish = () => {
     });
   };
 
+  //set the image list
   const onChange = (value) => {
     setImgList(value.fileList);
   };
@@ -61,7 +64,6 @@ const Publish = () => {
     setImageType(e.target.value);
    }
   
-
   return (
     <div className="publish">
       <Card
@@ -114,14 +116,16 @@ const Publish = () => {
             {/* 
             listType: 决定选择文件框的外观样式
             showUploadList: 控制显示上传列表
+            maxCount: 控制最大上传数量
           */}
           {imageType>0 && 
             <Upload
               name="image"
               listType="picture-card"
-              showUploadList={false}
+              showUploadList={true}
               action={"http://geek.itheima.net/v1_0/upload"}
               onChange={onChange}
+              maxCount ={imageType}
             >
               <div>
                 <PlusOutlined />

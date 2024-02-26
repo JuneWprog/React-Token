@@ -13,12 +13,16 @@ const {Option} = Select;
 const {RangePicker} = DatePicker;
 
 const Article = () => {
+  const statusMap = {
+    1:  <Tag color="warning">Reviewing</Tag>,
+    2:   <Tag color="success">Passed</Tag>
+  }
 
   const {channelList} = useChannel();
 
     const columns = [
         {
-          title: '封面',
+          title: 'Cover',
           dataIndex: 'cover',
           width: 120,
           render: cover => {
@@ -26,43 +30,44 @@ const Article = () => {
           }
         },
         {
-          title: '标题',
+          title: 'Title',
           dataIndex: 'title',
           width: 220
         },
         {
-          title: '状态',
+          title: 'Status',
           dataIndex: 'status',
           // data - 后端返回的状态status 根据它做条件渲染
           // data === 1 => 待审核
           // data === 2 => 审核通过
-        //   render: data => status[data]
+          render: status => statusMap[status]
+          // render: data => data === 1 ? <Tag color="warning">Reviewing</Tag> : <Tag color="success">Passed</Tag>
         },
         {
-          title: '发布时间',
+          title: 'Publish Time',
           dataIndex: 'pubdate'
         },
         {
-          title: '阅读数',
+          title: 'Views',
           dataIndex: 'read_count'
         },
         {
-          title: '评论数',
+          title: 'Comments',
           dataIndex: 'comment_count'
         },
         {
-          title: '点赞数',
+          title: 'Thumb Ups',
           dataIndex: 'like_count'
         },
         {
-          title: '操作',
+          title: 'Operation',
           render: data => {
             return (
               <Space size="middle">
                 <Button type="primary" shape="circle" icon={<EditOutlined />}  />
                 <Popconfirm
-                  title="删除文章"
-                  description="确认要删除当前文章吗?"
+                  title="Delete this article?"
+                  description="Are you sure you want to delete this article?"
                   okText="Yes"
                   cancelText="No"
                 >
@@ -105,22 +110,22 @@ const Article = () => {
           <Form initialValues={{ status: '' }} >
             <Form.Item label="Status" name="status">
               <Radio.Group>
-                <Radio value={''}>全部</Radio>
-                <Radio value={1}>待审核</Radio>
-                <Radio value={2}>审核通过</Radio>
+                <Radio value={''}>All</Radio>
+                <Radio value={1}>Review</Radio>
+                <Radio value={2}>Pass</Radio>
               </Radio.Group>
             </Form.Item>
   
-            <Form.Item label="频道" name="channel_id">
+            <Form.Item label="Channel" name="channel_id">
               <Select
-                placeholder="请选择文章频道"
+                placeholder="Channel"
                 style={{ width: 120 }}
               >
                 {channelList.map(item => <Option key={item.id} value={item.id}>{item.name}</Option>)}
               </Select>
             </Form.Item>
   
-            <Form.Item label="日期" name="date">
+            <Form.Item label="Date" name="date">
               {/* 传入locale属性 控制中文显示*/}
               <RangePicker ></RangePicker>
             </Form.Item>
@@ -133,7 +138,7 @@ const Article = () => {
           </Form>
         </Card>
         {/* 表格区域 */}
-        <Card title={`根据筛选条件共查询到 ${count} 条结果：`}>
+        <Card title={`Found ${count} Articles：`}>
           <Table rowKey="id" columns={columns} dataSource={articleList}></Table>
          
         </Card>

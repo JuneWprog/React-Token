@@ -1,6 +1,6 @@
 import './index.scss'
 import { Card, Form, Input, Button, message } from 'antd'
-import logo from '@/assets/geek_long.png'
+import logo from '@/assets/logo.png'
 import {useDispatch} from 'react-redux'
 import {fetchLogin} from '@/store/modules/user'
 import {useNavigate} from 'react-router-dom'
@@ -13,13 +13,14 @@ const Login = () => {
   const inputRef = useRef(null);
   // login form submit event pass values when validation is successful
   const onFinish = async (values) => {
-    console.log('Success:', values);
     //dispatch action to get token
     await dispatch(fetchLogin(values));
     //redirect to home page
     navigate('/');
     //remind the user of successful login
-    message.success('Login successfully');
+    // message.success('Login successfully');
+    message.success(localStorage.getItem("token"));
+
   }
 
   //set focus on the input box when the page is loaded

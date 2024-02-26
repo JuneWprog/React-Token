@@ -6,16 +6,18 @@ import { Table, Tag, Space } from 'antd'
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import img404 from '@/assets/error.png'
 import { useEffect, useState } from 'react'
-import {  getArticleListAPI } from '@/apis/article'
+import {  getArticleListAPI, delArticleAPI, getArticleById } from '@/apis/article'
 import { useChannel } from '@/hooks/useChannel'
+import {useNavigate} from 'react-router-dom'
 
 const {Option} = Select;
 const {RangePicker} = DatePicker;
 
 const Article = () => {
+  const navigate = useNavigate()
   const statusMap = {
     1:  <Tag color="warning">Reviewing</Tag>,
-    2:   <Tag color="success">Passed</Tag>
+    2:  <Tag color="success">Passed</Tag>
   }
 
   const {channelList} = useChannel();
@@ -38,8 +40,6 @@ const Article = () => {
           title: 'Status',
           dataIndex: 'status',
           // data - 后端返回的状态status 根据它做条件渲染
-          // data === 1 => 待审核
-          // data === 2 => 审核通过
           render: status => statusMap[status]
           // render: data => data === 1 ? <Tag color="warning">Reviewing</Tag> : <Tag color="success">Passed</Tag>
         },
@@ -64,12 +64,13 @@ const Article = () => {
           render: data => {
             return (
               <Space size="middle">
-                <Button type="primary" shape="circle" icon={<EditOutlined />}  />
+                <Button type="primary" shape="circle" icon={<EditOutlined />}  onClick ={()=>navigate(`/publish/?id=${data.id}`)} />
                 <Popconfirm
                   title="Delete this article?"
                   description="Are you sure you want to delete this article?"
                   okText="Yes"
                   cancelText="No"
+                  onConfirm = {()=>onConfirm(data)}
                 >
                   <Button
                     type="primary"
@@ -86,15 +87,54 @@ const Article = () => {
 
     const [articleList, setArticleList] = useState([])
     const [count, setCount] = useState(0)
+    const [reqData, setReqData] =useState({
+      status: '',
+      channel_id: '',
+      begin_pubdate: '',
+      end_pubdate: '',
+      page: 1,
+      per_page: 10
+    })
 
     useEffect(() => {
       const getArticleList = async () => {
-        const res = await getArticleListAPI()
+        const res = await getArticleListAPI(reqData)
         setArticleList(res.data.results)
         setCount(res.data.total_count)
       }
       getArticleList()
-    }, [])
+    }, [reqData])
+
+    //for search function
+    //1. get the filter data
+    const onFinish = (values) => {
+      setReqData({
+        ...reqData,
+        status: values.status,
+        channel_id: values.channel_id,
+        begin_pubdate: values.date[0].format('YYYY-MM-DD'),
+        end_pubdate: values.date[1].format('YYYY-MM-DD')
+      })
+    } 
+
+    const onPageChange = (page) => {
+      console.log(page)
+      setReqData({
+        ...reqData,
+        page
+      })
+    }
+
+    const onConfirm = async(data) => {
+      console.log(data)
+
+      await delArticleAPI(data.id)
+        setReqData({
+          ...reqData,
+        })
+    }
+
+    
    
     return (
       <div>
@@ -107,7 +147,7 @@ const Article = () => {
           }
           style={{ marginBottom: 20 }}
         >
-          <Form initialValues={{ status: '' }} >
+          <Form initialValues={{ status: '' }} onFinish = {onFinish}>
             <Form.Item label="Status" name="status">
               <Radio.Group>
                 <Radio value={''}>All</Radio>
@@ -126,20 +166,23 @@ const Article = () => {
             </Form.Item>
   
             <Form.Item label="Date" name="date">
-              {/* 传入locale属性 控制中文显示*/}
               <RangePicker ></RangePicker>
             </Form.Item>
   
             <Form.Item>
               <Button type="primary" htmlType="submit" style={{ marginLeft: 40 }}>
-                筛选
+                Search
               </Button>
             </Form.Item>
           </Form>
         </Card>
-        {/* 表格区域 */}
+        {/* list table */}
         <Card title={`Found ${count} Articles：`}>
-          <Table rowKey="id" columns={columns} dataSource={articleList}></Table>
+          <Table rowKey="id" columns={columns} dataSource={articleList} pagination={{
+            total: count,
+            pageSize: reqData.per_page,
+            onChange: onPageChange
+          }}></Table>
          
         </Card>
       </div>

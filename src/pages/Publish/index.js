@@ -11,14 +11,13 @@ import {
   message,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-import { Link, useSearchParams } from "react-router-dom";
 import "./index.scss";
+import { Link, useSearchParams } from 'react-router-dom'
 
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { useEffect, useState } from "react";
-import { getChannelAPI, createArticleAPI } from "@/apis/article";
-// import { createArticleAPI, getArticleById, updateArticleAPI } from '@/apis/article'
+import { useEffect, useState} from "react";
+import { getChannelAPI, createArticleAPI ,getArticleById} from "@/apis/article";
 import { useChannel } from '@/hooks/useChannel'
 const { Option } = Select;
 
@@ -55,7 +54,20 @@ const Publish = () => {
   const onTypeChange = (e) => {
     setImageType(e.target.value);
    }
-  
+  //fill the form field value if the request with a aritle id 
+  //get data from the server by the id
+  const [form] = Form.useForm();
+  const [searchParams] = useSearchParams();
+  const articleId = searchParams.get("id");
+   useEffect(() => {
+    async function getArticleDetail(){
+      const res= await getArticleById(articleId)
+      //automatic fill the form field value
+      form.setFieldsValue(res.data)
+    }
+    getArticleDetail()
+   },[articleId, form])
+
   return (
     <div className="publish">
       <Card
@@ -73,7 +85,7 @@ const Publish = () => {
           labelCol={{ span: 4 }}
           wrapperCol={{ span: 16 }}
           initialValues={{ type: 0 }}
-          // form={form}
+          form={form}
         >
           <Form.Item
             label="Title"

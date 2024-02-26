@@ -15,11 +15,12 @@ export function getChannelAPI(){
 //request instance for get and post articles    
 
 //1. get articles request
-function getArticlesAPI(){
+export function getArticleListAPI(params){
     return request(
         {
-            url: '/articles/?articleId',
-            method: 'GET'
+            url: '/mp/articles',
+            method: 'GET',
+            params
         }
     )
 }
